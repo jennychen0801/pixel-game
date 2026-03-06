@@ -12,6 +12,8 @@ export default function App() {
     const [score, setScore] = useState(0);
     const [bossImages, setBossImages] = useState([]);
     const [error, setError] = useState('');
+    const [userAnswers, setUserAnswers] = useState([]);
+    const [showReview, setShowReview] = useState(false);
 
     // 1. 預先載入 100 張 DiceBear Pixel Art 關主圖片
     useEffect(() => {
@@ -51,6 +53,8 @@ export default function App() {
                 setQuestions(data.questions);
                 setScore(0);
                 setCurrentQIndex(0);
+                setUserAnswers([]);
+                setShowReview(false);
                 setGameState('playing');
             } else {
                 throw new Error('無法取得題目');
@@ -69,6 +73,8 @@ export default function App() {
             ].slice(0, Math.max(1, QUESTION_COUNT)));
             setScore(0);
             setCurrentQIndex(0);
+            setUserAnswers([]);
+            setShowReview(false);
             setGameState('playing');
         }
     };
@@ -77,6 +83,14 @@ export default function App() {
     const handleAnswer = (selectedOption) => {
         const isCorrect = selectedOption === questions[currentQIndex].ans;
         const newScore = isCorrect ? score + 1 : score;
+
+        // 紀錄使用者的選擇
+        const newUserAnswers = [...userAnswers, {
+            qIndex: currentQIndex,
+            selectedOption,
+            isCorrect
+        }];
+        setUserAnswers(newUserAnswers);
 
         if (isCorrect) setScore(newScore);
 
@@ -183,6 +197,48 @@ export default function App() {
     // UI - Result
     if (gameState === 'result') {
         const isPass = score >= PASS_THRESHOLD;
+
+        if (showReview) {
+            return (
+                <div className="app-container" style={{ alignItems: 'stretch' }}>
+                    <h1 className="title" style={{ fontSize: '1.5rem', margin: '20px 0' }}>REVIEW</h1>
+                    <div className="pixel-panel review-panel" style={{ flex: 1, overflowY: 'auto', textAlign: 'left', padding: '15px' }}>
+                        {questions.map((q, idx) => {
+                            const userAnswer = userAnswers.find(ua => ua.qIndex === idx);
+                            const selectedOpt = userAnswer?.selectedOption;
+                            const isCorrect = userAnswer?.isCorrect;
+
+                            return (
+                                <div key={q.id} className="review-item" style={{
+                                    borderBottom: '2px solid #52525b',
+                                    paddingBottom: '15px',
+                                    marginBottom: '15px'
+                                }}>
+                                    <p className="question-text" style={{ fontSize: '1rem', marginBottom: '10px' }}>
+                                        Q{idx + 1}. {q.text}
+                                    </p>
+                                    <div style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                        <p style={{ color: isCorrect ? 'var(--success)' : 'var(--danger)' }}>
+                                            你的答案: {selectedOpt ? `${selectedOpt}. ${q[selectedOpt]}` : '未作答'}
+                                            {isCorrect ? ' ✓' : ' ✗'}
+                                        </p>
+                                        {!isCorrect && (
+                                            <p style={{ color: 'var(--success)' }}>
+                                                正確答案: {q.ans}. {q[q.ans]}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                        <button className="pixel-btn" style={{ flex: 1 }} onClick={() => setShowReview(false)}>BACK</button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="app-container">
                 <h1 className="title">GAME OVER</h1>
@@ -196,11 +252,18 @@ export default function App() {
                     <p style={{ marginBottom: '30px', color: '#a1a1aa' }}>
                         ( 門檻: {PASS_THRESHOLD} 題 )
                     </p>
-                    <button className="pixel-btn" onClick={() => {
-                        setScore(0);
-                        setCurrentQIndex(0);
-                        setGameState('home');
-                    }}>RESTART</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center' }}>
+                        <button className="pixel-btn option-btn" style={{ width: '100%' }} onClick={() => setShowReview(true)}>
+                            REVIEW ANSWERS
+                        </button>
+                        <button className="pixel-btn" style={{ width: '100%' }} onClick={() => {
+                            setScore(0);
+                            setCurrentQIndex(0);
+                            setUserAnswers([]);
+                            setShowReview(false);
+                            setGameState('home');
+                        }}>RESTART</button>
+                    </div>
                 </div>
             </div>
         );
