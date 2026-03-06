@@ -36,6 +36,10 @@ jobs:
         run: npm ci || npm install
 
       - name: Build
+        env:
+          VITE_GOOGLE_APP_SCRIPT_URL: ${{ secrets.VITE_GOOGLE_APP_SCRIPT_URL }}
+          VITE_PASS_THRESHOLD: ${{ secrets.VITE_PASS_THRESHOLD }}
+          VITE_QUESTION_COUNT: ${{ secrets.VITE_QUESTION_COUNT }}
         # 建立生產環境打包
         run: npm run build
 

@@ -38,7 +38,7 @@ export default function App() {
         setGameState('loading');
 
         try {
-            if (!SCRIPT_URL || SCRIPT_URL.includes('你的_GAS_部署網址')) {
+            if (!SCRIPT_URL || SCRIPT_URL.includes('你的_GAS_部署網址') || SCRIPT_URL.includes('你的_GAS_ID')) {
                 throw new Error('未設定 GAS URL');
             }
 
@@ -56,6 +56,8 @@ export default function App() {
                 throw new Error('無法取得題目');
             }
         } catch (err) {
+            console.error('API 抓取失敗，錯誤訊息:', err);
+            alert(`連線至 Google Apps Script 失敗！請確認 F12 開發者工具的 Console 面板。\n(如果剛設定完 .env，請記得重啟 Vite 伺服器 npm run dev)\n錯誤: ${err.message}`);
             console.warn('API 抓取失敗，使用 Demo 題庫', err);
             // Demo 題目資料結構 (未接通前測試用)
             setQuestions([
